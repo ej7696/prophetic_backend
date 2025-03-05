@@ -1,0 +1,6 @@
+.env
+node_modules/
+/public/videos
+/public/audios
+/public/images
+/public/uploads/userprofile
