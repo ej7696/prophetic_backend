@@ -1,0 +1,37 @@
+{
+  "name": "propheticpathwaybackend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node App.js",
+    "server": "node App.js",
+    "back": "nodemon App.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ashish Pareek",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "luxon": "^3.5.0",
+    "mongoose": "^8.6.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.15",
+    "nodemon": "^3.1.7",
+    "propheticpathwaybackend": "file:",
+    "transliteration": "^2.3.5",
+    "twilio": "^5.3.3",
+    "ws": "^8.18.0"
+  }
+}
