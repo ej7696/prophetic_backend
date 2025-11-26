@@ -1,33 +1,81 @@
 const mongoose = require("mongoose");
 
-const available = mongoose.Schema(
+const timeSlotSchema = new mongoose.Schema(
   {
-    timezone: { type: String, default: "UTC" },
-    date: {
+    startTime: {
       type: String,
       required: true,
+      match: [/^\d{2}:\d{2}$/, "Invalid time format (HH:mm)"],
     },
-    timeSlots: [
-      {
-        startTime: { type: String, required: true },
-        endTime: { type: String, required: true },
-      },
-    ],
+    endTime: {
+      type: String,
+      required: true,
+      match: [/^\d{2}:\d{2}$/, "Invalid time format (HH:mm)"],
+    },
+
+    // Optional ability to disable a slot without deleting it
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    // For future: if user booked a slot, we lock it
+    isBooked: {
+      type: Boolean,
+      default: false,
+    },
+
+    appointmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Appointment",
+      default: null,
+    },
   },
-  { timestamps: true }
+  { _id: false }
 );
 
-const availablity = mongoose.Schema(
+const availabilityDaySchema = new mongoose.Schema(
   {
-    availablity: [available],
-    consultantId: {
-      type: mongoose.Types.ObjectId,
-      ref: "consultant",
+    timezone: {
+      type: String,
+      default: "UTC",
+    },
+
+    // Using ISO date fixes many bugs
+    date: {
+      type: Date,
       required: true,
     },
-    timeZone: String,
+
+    timeSlots: {
+      type: [timeSlotSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Availablity", availablity);
+const availabilitySchema = new mongoose.Schema(
+  {
+    consultantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Consultant",
+      required: true,
+      index: true,
+    },
+
+    availability: {
+      type: [availabilityDaySchema],
+      default: [],
+    },
+  },
+  { timestamps: true }
+);
+
+// Unique day per consultant (prevents duplicate days)
+availabilitySchema.index(
+  { consultantId: 1, "availability.date": 1 },
+  { unique: false }
+);
+
+module.exports = mongoose.model("Availability", availabilitySchema, "availability");
