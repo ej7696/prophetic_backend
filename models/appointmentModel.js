@@ -6,28 +6,19 @@ const appointmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Consultant",
       required: true,
+      index: true, // helps prevent double booking
     },
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
-    // Store the actual session datetime in real Date format
-    sessionStart: {
-      type: Date,
-      required: true,
-    },
-
-    sessionEnd: {
-      type: Date,
-      required: true,
-    },
-
-    // Keep original values for UI display, if needed
+    // Use ISO format for correct date & timezone behavior
     appointmentDate: {
-      type: String,
+      type: Date,
       required: true,
     },
 
@@ -46,49 +37,24 @@ const appointmentSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Booking status
+    // FULL lifecycle of appointment
     status: {
       type: String,
-      enum: ["upcoming", "in-call", "completed", "canceled", "no-show"],
-      default: "upcoming",
+      enum: [
+        "scheduled",      // waiting for time
+        "ringing",        // call is being initiated
+        "inCall",         // currently in call
+        "completed",      // successfully finished
+        "canceled",       // canceled by user/admin/consultant
+        "expired",        // session time passed without joining
+      ],
+      default: "scheduled",
     },
 
-    // Call session details
-    callStatus: {
-      type: String,
-      enum: ["idle", "ringing", "inCall", "ended"],
-      default: "idle",
-    },
-
-    callStartedAt: {
-      type: Date,
-      default: null,
-    },
-
-    callEndedAt: {
-      type: Date,
-      default: null,
-    },
-
-    callDurationSeconds: {
-      type: Number,
-      default: 0,
-    },
-
-    callRecordingUrl: {
-      type: String,
-      default: null,
-    },
-
-    callSid: {
-      type: String,
-      default: null,
-    },
-
-    // Cancellation fields
+    // Who canceled (u = user, c = consultant, a = admin)
     canceledBy: {
       type: String,
-      enum: ["user", "consultant", null],
+      enum: ["u", "c", "a", null],
       default: null,
     },
 
@@ -97,45 +63,65 @@ const appointmentSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Email states
+    // CALL SESSION DETAILS
+    callStartedAt: {
+      type: Date,
+    },
+
+    callEndedAt: {
+      type: Date,
+    },
+
+    callDurationSeconds: {
+      type: Number,
+      default: 0,
+    },
+
+    // RECORDING URL (Twilio, Agora, internal storage, etc.)
+    recordingUrl: {
+      type: String,
+      default: null,
+    },
+
+    // More robust than strings
+    callSid: {
+      type: String,
+      default: null,
+    },
+
+    // For notification + reminder logic
+    reminderSent: {
+      type: Boolean,
+      default: false,
+    },
+
+    // For email flow tracking
     isMailSent: {
       type: Boolean,
       default: false,
     },
 
-    // Payment (future)
-    paymentStatus: {
-      type: String,
-      enum: ["pending", "paid", "refunded"],
-      default: "pending",
-    },
-
-    sessionPrice: {
+    // Optional user rating system
+    userRating: {
       type: Number,
-      default: 0,
+      min: 1,
+      max: 5,
+      default: null,
     },
 
-    refundStatus: {
-      type: String,
-      enum: ["none", "pending", "completed"],
-      default: "none",
-    },
-
-    transactionId: {
-      type: String,
+    consultantRating: {
+      type: Number,
+      min: 1,
+      max: 5,
       default: null,
     },
   },
   { timestamps: true }
 );
 
-// INDEXES for faster queries and double-booking protection
-appointmentSchema.index({ consultantId: 1, sessionStart: 1 });
-appointmentSchema.index({ sessionStart: 1 });
-appointmentSchema.index({ userId: 1 });
-
-module.exports = mongoose.model(
-  "Appointment",
-  appointmentSchema,
-  "appointments"
+appointmentSchema.index(
+  { consultantId: 1, appointmentDate: 1, "timeSlot.startTime": 1 },
+  { unique: false }
 );
+
+module.exports = mongoose.model("Appointment", appointmentSchema, "appointments");
