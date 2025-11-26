@@ -10,7 +10,11 @@ module.exports.verifyConsultantToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token.split(" ")[1], process.env.ADMIN_SECRET);
+    const decoded = jwt.verify(
+      token.split(" ")[1],
+      process.env.CONSULTANT_SECRET
+    );
+
     req.user = decoded;
     next();
   } catch (error) {
